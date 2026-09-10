@@ -1,0 +1,2176 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>鱼类边缘智能监测系统</title>
+
+<style>
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    padding: 24px;
+    background: #f4f6f9;
+    font-family: Arial, "Microsoft YaHei", sans-serif;
+    color: #222;
+}
+
+.container {
+    max-width: 1400px;
+    margin: 0 auto;
+}
+
+.header {
+    margin-bottom: 20px;
+}
+
+.header h1 {
+    margin: 0 0 8px 0;
+    font-size: 28px;
+}
+
+.status {
+    color: #666;
+    font-size: 14px;
+}
+
+.status.ok {
+    color: #198754;
+}
+
+.status.error {
+    color: #dc3545;
+}
+
+.section-title {
+    margin: 28px 0 12px;
+    font-size: 18px;
+    font-weight: bold;
+}
+
+.cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 16px;
+}
+
+.card {
+    background: #fff;
+    border-radius: 12px;
+    padding: 20px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.06);
+}
+
+.card-label {
+    font-size: 14px;
+    color: #777;
+}
+
+.card-value {
+    margin-top: 8px;
+    font-size: 30px;
+    font-weight: bold;
+}
+
+.card-unit {
+    font-size: 13px;
+    color: #999;
+    margin-top: 3px;
+}
+
+.charts {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 18px;
+}
+
+.chart-box {
+    background: white;
+    border-radius: 12px;
+    padding: 18px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.06);
+}
+
+.chart-title {
+    font-weight: bold;
+    margin-bottom: 12px;
+}
+
+canvas {
+    width: 100%;
+    height: 300px;
+    display: block;
+}
+
+.info {
+    margin-top: 24px;
+    background: white;
+    border-radius: 12px;
+    padding: 18px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.06);
+    font-size: 14px;
+    line-height: 1.8;
+}
+
+@media (max-width: 700px) {
+    body {
+        padding: 12px;
+    }
+
+    .header h1 {
+        font-size: 22px;
+    }
+
+    canvas {
+        height: 230px;
+    }
+}
+
+/* ==========================================================
+   Fish AI Video Panel
+   ========================================================== */
+
+.video-panel {
+    margin-bottom: 24px;
+    background: #ffffff;
+    border-radius: 12px;
+    padding: 18px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.06);
+}
+
+.video-title {
+    font-size: 18px;
+    font-weight: bold;
+    margin-bottom: 14px;
+}
+
+.video-frame-wrap {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    background: #000;
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+.video-frame-wrap iframe {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    border: 0;
+    background: #000;
+}
+
+.video-note {
+    margin-top: 10px;
+    color: #777;
+    font-size: 13px;
+}
+
+
+
+/* ==========================================================
+   Multi Camera Selector
+   ========================================================== */
+
+.camera-toolbar {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+
+    background: #ffffff;
+
+    padding: 16px 18px;
+    margin-bottom: 20px;
+
+    border-radius: 12px;
+
+    box-shadow:
+        0 2px 10px rgba(0,0,0,0.06);
+}
+
+.camera-toolbar-label {
+    font-size: 14px;
+    font-weight: bold;
+    color: #555;
+}
+
+.camera-select {
+    min-width: 240px;
+
+    padding: 9px 12px;
+
+    border: 1px solid #d8dce2;
+    border-radius: 7px;
+
+    background: white;
+
+    font-size: 14px;
+}
+
+.camera-info {
+    color: #777;
+    font-size: 13px;
+}
+
+@media (max-width: 700px) {
+
+    .camera-toolbar {
+        align-items: stretch;
+        flex-direction: column;
+    }
+
+    .camera-select {
+        width: 100%;
+    }
+}
+
+
+
+
+/* FISH_AI_DASHBOARD_V2 */
+
+.camera-status-badge {
+    display: inline-block;
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: bold;
+}
+
+.camera-status-online {
+    color: #137333;
+    background: #e6f4ea;
+}
+
+.camera-status-offline {
+    color: #b3261e;
+    background: #fce8e6;
+}
+
+.target-panel {
+    margin-top: 24px;
+    background: #fff;
+    border-radius: 12px;
+    padding: 18px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.06);
+}
+
+.target-table-wrap {
+    width: 100%;
+    overflow-x: auto;
+}
+
+.target-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+}
+
+.target-table th,
+.target-table td {
+    padding: 10px 12px;
+    border-bottom: 1px solid #eee;
+    text-align: center;
+    white-space: nowrap;
+}
+
+.target-table th {
+    background: #f7f8fa;
+    color: #555;
+}
+
+.target-table tbody tr:hover {
+    background: #fafafa;
+}
+
+.video-offline {
+    display: flex;
+    min-height: 360px;
+    align-items: center;
+    justify-content: center;
+    color: #888;
+    background: #111;
+    font-size: 18px;
+}
+
+.camera-summary {
+    margin-left: auto;
+    font-size: 13px;
+    color: #666;
+}
+
+@media (max-width: 700px) {
+    .camera-summary {
+        margin-left: 0;
+    }
+}
+
+
+</style>
+
+<script src="/js/flv.min.js"></script>
+
+</head>
+
+
+<body>
+
+<div class="container">
+
+    <div class="header">
+        <h1>鱼类边缘智能监测系统</h1>
+        <div id="status" class="status">
+            正在加载摄像头列表...
+        </div>
+    </div>
+
+
+    
+
+<!-- MULTI_CAMERA_SELECTOR_V1 -->
+
+<div class="camera-toolbar">
+
+    <div class="camera-toolbar-label">
+        监控摄像头
+    </div>
+
+    <select
+        id="cameraSelect"
+        class="camera-select">
+
+        <option>
+            正在加载...
+        </option>
+
+    </select>
+
+    <div
+        id="cameraInfo"
+        class="camera-info">
+        --
+    </div>
+
+    <span
+        id="cameraStatusBadge"
+        class="camera-status-badge camera-status-offline">
+        未知
+    </span>
+
+    <div
+        id="cameraSummary"
+        class="camera-summary">
+        --
+    </div>
+
+</div>
+
+<!-- FISH_VIDEO_PANEL_V1 -->
+
+<div class="video-panel">
+
+    <div class="video-title">
+        实时 AI 视频
+    </div>
+
+    <div class="video-frame-wrap">
+
+        
+<div class="video-container">
+
+<h3>实时 AI 视频</h3>
+
+<video
+ id="fishVideo"
+ style="
+ width:100%;
+ background:#000;
+ border-radius:8px;
+ "
+ controls
+ autoplay
+ muted
+ playsinline>
+</video>
+
+</div>
+
+
+    </div>
+
+    <div class="video-note" id="videoNote">视频源：--</div>
+
+</div>
+
+
+
+
+<div class="target-panel">
+
+    <div class="section-title" style="margin-top:0;">
+        当前目标详情
+    </div>
+
+    <div class="target-table-wrap">
+
+        <table class="target-table">
+
+            <thead>
+                <tr>
+                    <th>轨迹 ID</th>
+                    <th>类别</th>
+                    <th>置信度</th>
+                    <th>中心 X</th>
+                    <th>中心 Y</th>
+                    <th>VX</th>
+                    <th>VY</th>
+                    <th>速度</th>
+                </tr>
+            </thead>
+
+            <tbody id="targetTableBody">
+                <tr>
+                    <td colspan="8">暂无数据</td>
+                </tr>
+            </tbody>
+
+        </table>
+
+    </div>
+
+</div>
+
+
+<div class="section-title">实时监测</div>
+
+    <div class="cards">
+
+        <div class="card">
+            <div class="card-label">当前鱼数量</div>
+            <div class="card-value" id="fishCount">--</div>
+            <div class="card-unit">条</div>
+        </div>
+
+        <div class="card">
+            <div class="card-label">当前平均速度</div>
+            <div class="card-value" id="avgSpeed">--</div>
+            <div class="card-unit">px/s</div>
+        </div>
+
+        <div class="card">
+            <div class="card-label">当前最大速度</div>
+            <div class="card-value" id="maxSpeed">--</div>
+            <div class="card-unit">px/s</div>
+        </div>
+
+        <div class="card">
+            <div class="card-label">当前目标数</div>
+            <div class="card-value" id="objectCount">--</div>
+            <div class="card-unit">objects</div>
+        </div>
+
+        <div class="card">
+            <div class="card-label">AI 帧序号</div>
+            <div class="card-value" id="frameSeq">--</div>
+        </div>
+
+    </div>
+
+
+    <div class="section-title">24 小时统计</div>
+
+    <div class="cards">
+
+        <div class="card">
+            <div class="card-label">平均鱼数量</div>
+            <div class="card-value" id="statFishAvg">--</div>
+            <div class="card-unit">条</div>
+        </div>
+
+        <div class="card">
+            <div class="card-label">最低鱼数量</div>
+            <div class="card-value" id="statFishMin">--</div>
+            <div class="card-unit">条</div>
+        </div>
+
+        <div class="card">
+            <div class="card-label">最高鱼数量</div>
+            <div class="card-value" id="statFishMax">--</div>
+            <div class="card-unit">条</div>
+        </div>
+
+        <div class="card">
+            <div class="card-label">平均速度</div>
+            <div class="card-value" id="statAvgSpeed">--</div>
+            <div class="card-unit">px/s</div>
+        </div>
+
+        <div class="card">
+            <div class="card-label">最高速度</div>
+            <div class="card-value" id="statMaxSpeed">--</div>
+            <div class="card-unit">px/s</div>
+        </div>
+
+    </div>
+
+
+    <div class="section-title">趋势分析</div>
+
+    <div class="charts">
+
+        <div class="chart-box">
+            <div class="chart-title">
+                最近 2 小时鱼数量分钟趋势
+            </div>
+            <canvas id="fishChart"></canvas>
+        </div>
+
+        <div class="chart-box">
+            <div class="chart-title">
+                最近 2 小时鱼群速度趋势
+            </div>
+            <canvas id="speedChart"></canvas>
+        </div>
+
+        <div class="chart-box">
+            <div class="chart-title">
+                最近 7 天鱼数量小时趋势
+            </div>
+            <canvas id="hourChart"></canvas>
+        </div>
+
+    </div>
+
+
+    <div class="info">
+
+        <div>
+            摄像头：
+            <strong>pond_01</strong>
+        </div>
+
+        <div>
+            最新数据时间：
+            <span id="lastTime">--</span>
+        </div>
+
+        <div>
+            当前 AI 结果时延：
+            <span id="resultAge">--</span> ms
+        </div>
+
+        <div>
+            当前源画面时延：
+            <span id="frameAge">--</span> ms
+        </div>
+
+    </div>
+
+</div>
+
+
+<script>
+
+// MULTI_CAMERA_DASHBOARD_V1
+let CAMERA_ID = "pond_01";
+let CURRENT_CAMERA = null;
+let CAMERA_LIST = [];
+let FLV_PLAYER = null;
+
+
+function safeValue(value, digits = null) {
+
+    if (value === null || value === undefined) {
+        return "--";
+    }
+
+    if (digits !== null && typeof value === "number") {
+        return value.toFixed(digits);
+    }
+
+    return value;
+}
+
+
+function resizeCanvas(canvas) {
+
+    const dpr = window.devicePixelRatio || 1;
+
+    const rect = canvas.getBoundingClientRect();
+
+    canvas.width =
+        Math.max(300, Math.floor(rect.width * dpr));
+
+    canvas.height =
+        Math.max(200, Math.floor(rect.height * dpr));
+
+    const ctx = canvas.getContext("2d");
+
+    ctx.setTransform(
+        dpr,
+        0,
+        0,
+        dpr,
+        0,
+        0
+    );
+
+    return {
+        ctx: ctx,
+        width: rect.width,
+        height: rect.height
+    };
+}
+
+
+function drawChart(
+    canvasId,
+    labels,
+    series
+) {
+
+    const canvas =
+        document.getElementById(canvasId);
+
+    const {
+        ctx,
+        width,
+        height
+    } = resizeCanvas(canvas);
+
+
+    ctx.clearRect(
+        0,
+        0,
+        width,
+        height
+    );
+
+
+    const padding = {
+        left: 55,
+        right: 20,
+        top: 20,
+        bottom: 45
+    };
+
+
+    const plotWidth =
+        width -
+        padding.left -
+        padding.right;
+
+    const plotHeight =
+        height -
+        padding.top -
+        padding.bottom;
+
+
+    let allValues = [];
+
+    series.forEach(s => {
+
+        s.values.forEach(v => {
+
+            if (
+                v !== null &&
+                v !== undefined &&
+                Number.isFinite(v)
+            ) {
+                allValues.push(v);
+            }
+
+        });
+
+    });
+
+
+    if (allValues.length === 0) {
+
+        ctx.fillStyle = "#888";
+        ctx.font = "14px Arial";
+        ctx.fillText(
+            "暂无数据",
+            width / 2 - 28,
+            height / 2
+        );
+
+        return;
+    }
+
+
+    let minValue =
+        Math.min(...allValues);
+
+    let maxValue =
+        Math.max(...allValues);
+
+
+    if (minValue === maxValue) {
+        minValue -= 1;
+        maxValue += 1;
+    }
+
+
+    const range =
+        maxValue - minValue;
+
+    minValue -= range * 0.1;
+    maxValue += range * 0.1;
+
+
+    ctx.strokeStyle = "#ddd";
+    ctx.lineWidth = 1;
+
+    ctx.fillStyle = "#666";
+    ctx.font = "12px Arial";
+
+
+    const yLines = 5;
+
+    for (
+        let i = 0;
+        i <= yLines;
+        i++
+    ) {
+
+        const y =
+            padding.top +
+            plotHeight *
+            i /
+            yLines;
+
+
+        ctx.beginPath();
+
+        ctx.moveTo(
+            padding.left,
+            y
+        );
+
+        ctx.lineTo(
+            width - padding.right,
+            y
+        );
+
+        ctx.stroke();
+
+
+        const value =
+            maxValue -
+            (
+                maxValue -
+                minValue
+            ) *
+            i /
+            yLines;
+
+
+        ctx.fillText(
+            value.toFixed(1),
+            5,
+            y + 4
+        );
+
+    }
+
+
+    const count =
+        labels.length;
+
+
+    const xFor = index => {
+
+        if (count <= 1) {
+            return padding.left;
+        }
+
+        return (
+            padding.left +
+            plotWidth *
+            index /
+            (count - 1)
+        );
+
+    };
+
+
+    const yFor = value => {
+
+        return (
+            padding.top +
+            (
+                maxValue -
+                value
+            ) /
+            (
+                maxValue -
+                minValue
+            ) *
+            plotHeight
+        );
+
+    };
+
+
+    const labelStep =
+        Math.max(
+            1,
+            Math.ceil(count / 8)
+        );
+
+
+    labels.forEach(
+        (label, index) => {
+
+            if (
+                index % labelStep !== 0 &&
+                index !== count - 1
+            ) {
+                return;
+            }
+
+            const x =
+                xFor(index);
+
+            ctx.fillStyle = "#777";
+
+            ctx.save();
+
+            ctx.translate(
+                x,
+                height - 10
+            );
+
+            ctx.rotate(
+                -0.45
+            );
+
+            ctx.fillText(
+                label,
+                0,
+                0
+            );
+
+            ctx.restore();
+
+        }
+    );
+
+
+    const colors = [
+        "#0d6efd",
+        "#dc3545",
+        "#198754"
+    ];
+
+
+    series.forEach(
+        (s, seriesIndex) => {
+
+            ctx.strokeStyle =
+                colors[
+                    seriesIndex %
+                    colors.length
+                ];
+
+            ctx.lineWidth = 2;
+
+            ctx.beginPath();
+
+            let started = false;
+
+            s.values.forEach(
+                (value, index) => {
+
+                    if (
+                        value === null ||
+                        value === undefined ||
+                        !Number.isFinite(value)
+                    ) {
+
+                        started = false;
+                        return;
+                    }
+
+                    const x =
+                        xFor(index);
+
+                    const y =
+                        yFor(value);
+
+                    if (!started) {
+
+                        ctx.moveTo(
+                            x,
+                            y
+                        );
+
+                        started = true;
+
+                    }
+                    else {
+
+                        ctx.lineTo(
+                            x,
+                            y
+                        );
+
+                    }
+
+                }
+            );
+
+            ctx.stroke();
+
+        }
+    );
+
+
+    let legendX =
+        padding.left;
+
+    series.forEach(
+        (s, index) => {
+
+            ctx.fillStyle =
+                colors[
+                    index %
+                    colors.length
+                ];
+
+            ctx.fillRect(
+                legendX,
+                3,
+                14,
+                4
+            );
+
+            ctx.fillStyle = "#555";
+
+            ctx.fillText(
+                s.name,
+                legendX + 20,
+                9
+            );
+
+            legendX +=
+                20 +
+                ctx.measureText(
+                    s.name
+                ).width +
+                35;
+
+        }
+    );
+
+}
+
+
+function formatMinute(timeString) {
+
+    const d =
+        new Date(timeString);
+
+    return String(
+        d.getHours()
+    ).padStart(2, "0")
+        +
+        ":"
+        +
+        String(
+            d.getMinutes()
+        ).padStart(2, "0");
+}
+
+
+function formatHour(timeString) {
+
+    const d =
+        new Date(timeString);
+
+    return (
+        String(
+            d.getMonth() + 1
+        ).padStart(2, "0")
+        +
+        "-"
+        +
+        String(
+            d.getDate()
+        ).padStart(2, "0")
+        +
+        " "
+        +
+        String(
+            d.getHours()
+        ).padStart(2, "0")
+        +
+        ":00"
+    );
+}
+
+
+async function updateLatest() {
+
+    const status =
+        document.getElementById(
+            "status"
+        );
+
+    try {
+
+        const response =
+            await fetch(
+                "/api/cameras/" +
+                CAMERA_ID +
+                "/latest",
+                {
+                    cache: "no-store"
+                }
+            );
+
+
+        if (!response.ok) {
+
+            throw new Error(
+                "HTTP " +
+                response.status
+            );
+
+        }
+
+
+        const data =
+            await response.json();
+
+        updateTargetTable(
+            data.objects || []
+        );
+
+
+        document.getElementById(
+            "fishCount"
+        ).textContent =
+            safeValue(
+                data.fish_count
+            );
+
+
+        document.getElementById(
+            "avgSpeed"
+        ).textContent =
+            safeValue(
+                data.avg_speed_px_s,
+                2
+            );
+
+
+        document.getElementById(
+            "maxSpeed"
+        ).textContent =
+            safeValue(
+                data.max_speed_px_s,
+                2
+            );
+
+
+        document.getElementById(
+            "frameSeq"
+        ).textContent =
+            safeValue(
+                data.frame_seq
+            );
+
+
+        document.getElementById(
+            "objectCount"
+        ).textContent =
+            Array.isArray(
+                data.objects
+            )
+            ?
+            data.objects.length
+            :
+            "--";
+
+
+        document.getElementById(
+            "lastTime"
+        ).textContent =
+            safeValue(
+                data.received_at
+            );
+
+
+        document.getElementById(
+            "resultAge"
+        ).textContent =
+            safeValue(
+                data.result_age_ms
+            );
+
+
+        document.getElementById(
+            "frameAge"
+        ).textContent =
+            safeValue(
+                data.source_frame_age_ms
+            );
+
+
+        const received =
+            new Date(
+                data.received_at
+            ).getTime();
+
+
+        const ageSeconds =
+            (
+                Date.now() -
+                received
+            ) / 1000;
+
+
+        if (
+            Number.isFinite(ageSeconds) &&
+            ageSeconds <= 10
+        ) {
+
+            status.className =
+                "status ok";
+
+            status.textContent =
+                ((CURRENT_CAMERA && CURRENT_CAMERA.camera_name) || CAMERA_ID) + " 在线 · 数据正常";
+
+        }
+        else {
+
+            status.className =
+                "status error";
+
+            status.textContent =
+                ((CURRENT_CAMERA && CURRENT_CAMERA.camera_name) || CAMERA_ID) + " 数据超时 · 最后数据：" +
+                data.received_at;
+
+        }
+
+    }
+    catch (error) {
+
+        status.className =
+            "status error";
+
+        status.textContent =
+            "连接异常：" +
+            error.message;
+
+    }
+
+}
+
+
+async function updateStatistics() {
+
+    try {
+
+        const response =
+            await fetch(
+                "/api/cameras/" +
+                CAMERA_ID +
+                "/statistics?hours=24",
+                {
+                    cache: "no-store"
+                }
+            );
+
+
+        if (!response.ok) {
+            return;
+        }
+
+
+        const data =
+            await response.json();
+
+
+        document.getElementById(
+            "statFishAvg"
+        ).textContent =
+            safeValue(
+                data.fish_avg,
+                2
+            );
+
+
+        document.getElementById(
+            "statFishMin"
+        ).textContent =
+            safeValue(
+                data.fish_min
+            );
+
+
+        document.getElementById(
+            "statFishMax"
+        ).textContent =
+            safeValue(
+                data.fish_max
+            );
+
+
+        document.getElementById(
+            "statAvgSpeed"
+        ).textContent =
+            safeValue(
+                data.avg_speed_px_s,
+                2
+            );
+
+
+        document.getElementById(
+            "statMaxSpeed"
+        ).textContent =
+            safeValue(
+                data.max_speed_px_s,
+                2
+            );
+
+    }
+    catch (error) {
+
+        console.error(
+            "Statistics error:",
+            error
+        );
+
+    }
+
+}
+
+
+async function updateMinuteCharts() {
+
+    try {
+
+        const response =
+            await fetch(
+                "/api/cameras/" +
+                CAMERA_ID +
+                "/history?resolution=minute&hours=2",
+                {
+                    cache: "no-store"
+                }
+            );
+
+
+        if (!response.ok) {
+            return;
+        }
+
+
+        const data =
+            await response.json();
+
+
+        const points =
+            data.points || [];
+
+
+        const labels =
+            points.map(
+                p => formatMinute(
+                    p.time
+                )
+            );
+
+
+        drawChart(
+            "fishChart",
+            labels,
+            [
+                {
+                    name:
+                        "平均鱼数量",
+
+                    values:
+                        points.map(
+                            p =>
+                            p.fish_avg
+                        )
+                }
+            ]
+        );
+
+
+        drawChart(
+            "speedChart",
+            labels,
+            [
+                {
+                    name:
+                        "平均速度",
+
+                    values:
+                        points.map(
+                            p =>
+                            p.avg_speed_px_s
+                        )
+                },
+
+                {
+                    name:
+                        "最大速度",
+
+                    values:
+                        points.map(
+                            p =>
+                            p.max_speed_px_s
+                        )
+                }
+            ]
+        );
+
+    }
+    catch (error) {
+
+        console.error(
+            "Minute history error:",
+            error
+        );
+
+    }
+
+}
+
+
+async function updateHourChart() {
+
+    try {
+
+        const response =
+            await fetch(
+                "/api/cameras/" +
+                CAMERA_ID +
+                "/history?resolution=hour&hours=168",
+                {
+                    cache: "no-store"
+                }
+            );
+
+
+        if (!response.ok) {
+            return;
+        }
+
+
+        const data =
+            await response.json();
+
+
+        const points =
+            data.points || [];
+
+
+        drawChart(
+            "hourChart",
+
+            points.map(
+                p =>
+                formatHour(
+                    p.time
+                )
+            ),
+
+            [
+                {
+                    name:
+                        "平均鱼数量",
+
+                    values:
+                        points.map(
+                            p =>
+                            p.fish_avg
+                        )
+                }
+            ]
+        );
+
+    }
+    catch (error) {
+
+        console.error(
+            "Hour history error:",
+            error
+        );
+
+    }
+
+}
+
+
+
+
+
+
+function clearCameraData() {
+
+    const ids = [
+        "fishCount",
+        "avgSpeed",
+        "maxSpeed",
+        "objectCount",
+        "frameSeq",
+        "statFishAvg",
+        "statFishMin",
+        "statFishMax",
+        "statAvgSpeed",
+        "statMaxSpeed",
+        "lastTime",
+        "resultAge",
+        "frameAge"
+    ];
+
+    ids.forEach(id => {
+
+        const el =
+            document.getElementById(id);
+
+        if (el) {
+            el.textContent = "--";
+        }
+
+    });
+
+
+    const body =
+        document.getElementById(
+            "targetTableBody"
+        );
+
+    if (body) {
+
+        body.innerHTML =
+            '<tr><td colspan="8">正在加载...</td></tr>';
+
+    }
+
+}
+
+
+function updateTargetTable(objects) {
+
+    const body =
+        document.getElementById(
+            "targetTableBody"
+        );
+
+    if (!body) {
+        return;
+    }
+
+
+    if (
+        !Array.isArray(objects)
+        ||
+        objects.length === 0
+    ) {
+
+        body.innerHTML =
+            '<tr><td colspan="8">当前没有检测目标</td></tr>';
+
+        return;
+    }
+
+
+    body.innerHTML = "";
+
+
+    objects.forEach(obj => {
+
+        const tr =
+            document.createElement(
+                "tr"
+            );
+
+
+        const center =
+            obj.center || {};
+
+        const velocity =
+            obj.velocity || {};
+
+
+        const vx =
+            Number(
+                velocity.vx || 0
+            );
+
+        const vy =
+            Number(
+                velocity.vy || 0
+            );
+
+        const speed =
+            Math.sqrt(
+                vx * vx +
+                vy * vy
+            );
+
+
+        const values = [
+
+            obj.track_id ?? "--",
+
+            obj.class ?? "--",
+
+            obj.confidence != null
+                ? Number(
+                    obj.confidence
+                ).toFixed(3)
+                : "--",
+
+            center.x != null
+                ? Number(
+                    center.x
+                ).toFixed(1)
+                : "--",
+
+            center.y != null
+                ? Number(
+                    center.y
+                ).toFixed(1)
+                : "--",
+
+            vx.toFixed(1),
+
+            vy.toFixed(1),
+
+            speed.toFixed(1)
+        ];
+
+
+        values.forEach(value => {
+
+            const td =
+                document.createElement(
+                    "td"
+                );
+
+            td.textContent =
+                value;
+
+            tr.appendChild(td);
+
+        });
+
+
+        body.appendChild(tr);
+
+    });
+
+}
+
+
+function updateCameraStatusUI(camera) {
+
+    const badge =
+        document.getElementById(
+            "cameraStatusBadge"
+        );
+
+    if (!badge) {
+        return;
+    }
+
+
+    if (
+        camera &&
+        camera.ai_online
+    ) {
+
+        badge.className =
+            "camera-status-badge camera-status-online";
+
+        badge.textContent =
+            "AI 在线";
+
+    }
+    else {
+
+        badge.className =
+            "camera-status-badge camera-status-offline";
+
+        badge.textContent =
+            "AI 离线";
+
+    }
+
+}
+
+
+function updateCameraSummary() {
+
+    const summary =
+        document.getElementById(
+            "cameraSummary"
+        );
+
+    if (!summary) {
+        return;
+    }
+
+
+    const total =
+        CAMERA_LIST.length;
+
+
+    const online =
+        CAMERA_LIST.filter(
+            c => c.ai_online
+        ).length;
+
+
+    summary.textContent =
+        "摄像头 "
+        +
+        total
+        +
+        " 路 · 在线 "
+        +
+        online
+        +
+        " 路";
+}
+
+
+async function loadCameras() {
+
+    const select =
+        document.getElementById(
+            "cameraSelect"
+        );
+
+
+    try {
+
+        const response =
+            await fetch(
+                "/api/cameras/",
+                {
+                    cache: "no-store"
+                }
+            );
+
+
+        if (!response.ok) {
+
+            throw new Error(
+                "HTTP " +
+                response.status
+            );
+
+        }
+
+
+        const data =
+            await response.json();
+
+
+        CAMERA_LIST =
+            data.cameras || [];
+
+        updateCameraSummary();
+
+
+        select.innerHTML = "";
+
+
+        if (
+            CAMERA_LIST.length === 0
+        ) {
+
+            const option =
+                document.createElement(
+                    "option"
+                );
+
+            option.textContent =
+                "没有已注册摄像头";
+
+            select.appendChild(
+                option
+            );
+
+            document.getElementById(
+                "status"
+            ).textContent =
+                "当前没有可用摄像头";
+
+            return;
+        }
+
+
+        CAMERA_LIST.forEach(
+            camera => {
+
+                const option =
+                    document.createElement(
+                        "option"
+                    );
+
+
+                option.value =
+                    camera.camera_id;
+
+
+                option.textContent =
+                    (
+                        camera.ai_online
+                        ? "● "
+                        : "○ "
+                    )
+                    +
+                    camera.camera_name;
+
+
+                select.appendChild(
+                    option
+                );
+
+            }
+        );
+
+
+        let initial =
+            CAMERA_LIST.find(
+                camera =>
+                    camera.camera_id
+                    === CAMERA_ID
+            );
+
+
+        if (!initial) {
+
+            initial =
+                CAMERA_LIST[0];
+
+        }
+
+
+        select.value =
+            initial.camera_id;
+
+
+        select.addEventListener(
+            "change",
+            event => {
+
+                switchCamera(
+                    event.target.value
+                );
+
+            }
+        );
+
+
+        await switchCamera(
+            initial.camera_id
+        );
+
+    }
+    catch (error) {
+
+        document.getElementById(
+            "status"
+        ).className =
+            "status error";
+
+
+        document.getElementById(
+            "status"
+        ).textContent =
+            "摄像头列表加载失败：" +
+            error.message;
+
+    }
+
+}
+
+
+async function switchCamera(
+    cameraId
+) {
+
+    const camera =
+        CAMERA_LIST.find(
+            item =>
+                item.camera_id
+                === cameraId
+        );
+
+
+    if (!camera) {
+        return;
+    }
+
+
+    CAMERA_ID =
+        camera.camera_id;
+
+
+    CURRENT_CAMERA =
+        camera;
+
+    clearCameraData();
+
+    updateCameraStatusUI(
+        camera
+    );
+
+
+    const displayName =
+        camera.camera_name
+        ||
+        camera.camera_id;
+
+
+    document.getElementById(
+        "cameraInfo"
+    ).textContent =
+        "ID: "
+        +
+        camera.camera_id
+        +
+        " · "
+        +
+        (
+            camera.ai_online
+            ? "AI 在线"
+            : "AI 离线"
+        );
+
+
+    const videoNote =
+        document.getElementById(
+            "videoNote"
+        );
+
+
+    if (videoNote) {
+
+        videoNote.textContent =
+            "视频源："
+            +
+            displayName
+            +
+            " · "
+            +
+            camera.stream_name;
+
+    }
+
+
+    document.getElementById(
+        "status"
+    ).className =
+        camera.ai_online
+        ?
+        "status ok"
+        :
+        "status error";
+
+
+    document.getElementById(
+        "status"
+    ).textContent =
+        "正在切换到 "
+        +
+        displayName
+        +
+        " ...";
+
+
+    /*
+     * 根据 AI 在线状态控制视频初始化
+     */
+    if (camera.ai_online) {
+
+        setTimeout(() => {
+            initFishVideo();
+        }, 300);
+
+    }
+    else {
+
+        destroyFishVideo();
+
+        const video =
+            document.getElementById(
+                "fishVideo"
+            );
+
+        if (video) {
+            video.removeAttribute(
+                "src"
+            );
+            video.load();
+        }
+
+    }
+
+
+    /*
+     * 切换实时数据、统计和趋势
+     */
+    await refreshDashboard();
+
+}
+
+
+async function refreshDashboard() {
+
+    await Promise.all([
+        updateLatest(),
+        updateStatistics(),
+        updateMinuteCharts(),
+        updateHourChart()
+    ]);
+
+}
+
+
+window.addEventListener("load", () => {
+    loadCameras();
+});
+
+
+setInterval(
+    updateLatest,
+    2000
+);
+
+
+setInterval(
+    updateStatistics,
+    30000
+);
+
+
+setInterval(
+    updateMinuteCharts,
+    60000
+);
+
+
+setInterval(
+    updateHourChart,
+    60000
+);
+
+
+window.addEventListener(
+    "resize",
+    () => {
+
+        updateMinuteCharts();
+        updateHourChart();
+
+    }
+);
+
+</script>
+
+
+
+<script>
+
+
+function destroyFishVideo() {
+
+    if (FLV_PLAYER) {
+
+        try {
+            FLV_PLAYER.pause();
+        }
+        catch (e) {}
+
+        try {
+            FLV_PLAYER.unload();
+        }
+        catch (e) {}
+
+        try {
+            FLV_PLAYER.detachMediaElement();
+        }
+        catch (e) {}
+
+        try {
+            FLV_PLAYER.destroy();
+        }
+        catch (e) {}
+
+        FLV_PLAYER = null;
+    }
+
+}
+
+
+function initFishVideo() {
+
+    if (!CURRENT_CAMERA) {
+        return;
+    }
+
+    if (
+        typeof flvjs === "undefined" ||
+        !flvjs.isSupported()
+    ) {
+
+        console.log(
+            "flv.js 不可用"
+        );
+
+        return;
+    }
+
+
+    destroyFishVideo();
+
+
+    const video =
+        document.getElementById(
+            "fishVideo"
+        );
+
+
+    FLV_PLAYER =
+        flvjs.createPlayer(
+            {
+                type: "flv",
+
+                isLive: true,
+
+                url:
+                    CURRENT_CAMERA.video_url
+            },
+
+            {
+                enableWorker: false,
+
+                enableStashBuffer: false,
+
+                stashInitialSize: 128
+            }
+        );
+
+
+    FLV_PLAYER.attachMediaElement(
+        video
+    );
+
+
+    FLV_PLAYER.load();
+
+
+    FLV_PLAYER.play()
+        .catch(
+            error => {
+
+                console.log(
+                    "视频自动播放：",
+                    error
+                );
+
+            }
+        );
+
+}
+
+
+
+</script>
+
+
+
+<script>
+
+/*
+ * 每10秒刷新摄像头列表在线状态。
+ * 不主动切换用户当前选中的摄像头。
+ */
+setInterval(async () => {
+
+    try {
+
+        const response =
+            await fetch(
+                "/api/cameras/",
+                {
+                    cache: "no-store"
+                }
+            );
+
+        if (!response.ok) {
+            return;
+        }
+
+
+        const data =
+            await response.json();
+
+
+        CAMERA_LIST =
+            data.cameras || [];
+
+
+        updateCameraSummary();
+
+
+        if (CURRENT_CAMERA) {
+
+            const latestCamera =
+                CAMERA_LIST.find(
+                    c =>
+                        c.camera_id
+                        === CAMERA_ID
+                );
+
+
+            if (latestCamera) {
+
+                CURRENT_CAMERA =
+                    latestCamera;
+
+                updateCameraStatusUI(
+                    latestCamera
+                );
+
+            }
+
+        }
+
+    }
+    catch (e) {
+
+        console.log(
+            "camera status refresh:",
+            e
+        );
+
+    }
+
+}, 10000);
+
+</script>
+
+
+</body>
+</html>

@@ -1,0 +1,69 @@
+# python
+__pycache__/
+*.pyc
+
+# virtual environment
+venv/
+.venv/
+
+# secrets
+.env
+*.env
+
+# logs
+*.log
+
+# database
+*.db
+*.sqlite
+
+# ssh
+*.pem
+*.key
+
+# videos
+*.mp4
+*.avi
+
+# cache
+cache/
+runs/
+
+# Environment and secrets
+.env
+.env.local
+.env.production
+*.secret
+
+# Python cache
+__pycache__/
+*.py[cod]
+
+# Virtual environments
+venv/
+.venv/
+
+# Logs
+*.log
+logs/
+
+# Backup files
+*.bak
+*.backup
+*.bak_*
+*~
+
+# SSH / private keys
+.ssh/
+*.pem
+*.key
+
+# Database dumps
+*.sql.gz
+*.dump
+
+# Large media
+*.mp4
+*.avi
+*.mkv
+*.mov

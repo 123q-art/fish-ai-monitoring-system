@@ -1,0 +1,21 @@
+[Unit]
+Description=Fish AI Independent Dashboard
+After=network.target fish-ai-report.service
+Requires=fish-ai-report.service
+
+[Service]
+Type=simple
+
+ExecStartPre=/usr/sbin/nginx \
+-t \
+-c /opt/fish-ai-dashboard/nginx.conf
+
+ExecStart=/usr/sbin/nginx \
+-c /opt/fish-ai-dashboard/nginx.conf \
+-g "daemon off;"
+
+Restart=always
+RestartSec=3
+
+[Install]
+WantedBy=multi-user.target

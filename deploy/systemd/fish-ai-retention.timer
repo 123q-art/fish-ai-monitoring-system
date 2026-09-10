@@ -1,0 +1,10 @@
+[Unit]
+Description=Run Fish AI Database Retention Daily
+
+[Timer]
+OnCalendar=*-*-* 03:20:00
+Persistent=true
+Unit=fish-ai-retention.service
+
+[Install]
+WantedBy=timers.target

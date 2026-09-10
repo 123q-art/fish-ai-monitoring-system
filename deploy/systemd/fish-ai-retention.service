@@ -1,0 +1,17 @@
+[Unit]
+Description=Fish AI Database Retention and Aggregation
+After=postgresql.service
+Requires=postgresql.service
+
+[Service]
+Type=oneshot
+User=ubuntu
+Group=ubuntu
+EnvironmentFile=/etc/fish-ai-retention.env
+
+ExecStart=/usr/bin/psql \
+    -h 127.0.0.1 \
+    -U fish_ai \
+    -d fish_ai \
+    -v ON_ERROR_STOP=1 \
+    -f /opt/fish-ai-server/retention.sql

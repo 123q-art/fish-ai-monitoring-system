@@ -1,0 +1,22 @@
+[Unit]
+Description=Fish AI Report Server
+After=network.target postgresql.service
+
+[Service]
+Type=simple
+
+User=ubuntu
+Group=ubuntu
+
+WorkingDirectory=/opt/fish-ai-server
+
+EnvironmentFile=/etc/fish-ai-report.env
+
+ExecStart=/opt/fish-ai-server/venv/bin/uvicorn ai_report_server:app --host 127.0.0.1 --port 19090 --workers 2
+
+Restart=always
+RestartSec=3
+
+[Install]
+WantedBy=multi-user.target
+

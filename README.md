@@ -54,3 +54,14 @@ Raspberry Pi -> AI JSON -> SSH Tunnel -> FastAPI -> PostgreSQL -> Dashboard
 - 不要提交 Token
 - 不要提交数据库密码
 - 不要提交 SSH 私钥
+
+## WVP / ZLMediaKit 视频平台集成
+
+本项目通过 **WVP-GB28181-Pro + ZLMediaKit** 实现 GB28181 摄像机/NVR 接入、SIP 信令、RTP 媒体传输、直播与录像能力。
+
+- **WVP-GB28181-Pro**：设备接入、SIP 信令、通道管理、点播与录像控制
+- **ZLMediaKit**：RTP / RTSP / RTMP / HLS / MP4 等媒体处理
+- **Fish AI Monitoring System**：视频 AI 分析、监控 API 与 Dashboard
+
+详细架构、端口规划和脱敏配置模板见：[`deploy/wvp/README.md`](deploy/wvp/README.md)
+

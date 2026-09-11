@@ -67,3 +67,10 @@ logs/
 *.avi
 *.mkv
 *.mov
+
+# WVP / ZLMediaKit local production config
+deploy/wvp/application.yml
+deploy/wvp/config.ini
+deploy/wvp/runtime.env
+deploy/wvp/*.bak.*
+deploy/wvp/*.beforefix.*
